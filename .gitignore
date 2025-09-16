@@ -47,3 +47,11 @@ __pycache__/
 
 # Python virtual environment
 .venv*
+venv/
+
+# Stack management
+.env
+workspace/
+*.tfvars
+!*.tfvars.template
+!*.tfvars.j2

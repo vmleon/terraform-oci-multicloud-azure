@@ -1,0 +1,80 @@
+# Common
+common_tags = {
+    scenario  = "{{ scenario | default('Quick Start - Single AZ') }}"
+    project   = "{{ project | default('Oracle Database @ Azure') }}"
+    createdby = "{{ created_by | default('avm-oci-quickstart') }}"
+    delete    = "{{ delete_tag | default('yes') }}"
+}
+
+# AZ Resource Group
+az_region="{{ az_region | default('germanywestcentral') }}"
+az_zone="{{ az_zone | default('3') }}"
+
+resource_group = "{{ resource_group | default('oradb') }}"
+new_rg = {{ new_rg | default('true') | lower }}
+random_suffix_length = {{ random_suffix_length | default(3) }}
+
+# AZ VNet
+virtual_network_name            = "{{ virtual_network_name | default('vnet') }}"
+virtual_network_address_space   = "{{ virtual_network_address_space | default('10.1.0.0/16') }}"
+delegated_subnet_address_prefix = "{{ delegated_subnet_address_prefix | default('10.1.1.0/24') }}"
+delegated_subnet_name           = "{{ delegated_subnet_name | default('sn-oradb') }}"
+
+# AZ Exadata Infrastructure
+exadata_infrastructure_name="{{ exadata_infrastructure_name | default('real') }}"
+exadata_infrastructure_compute_count={{ exadata_infrastructure_compute_count | default(2) }}
+exadata_infrastructure_maintenance_window_lead_time_in_weeks={{ exadata_infrastructure_maintenance_window_lead_time_in_weeks | default(1) }}
+exadata_infrastructure_maintenance_window_preference="{{ exadata_infrastructure_maintenance_window_preference | default('NoPreference') }}"
+exadata_infrastructure_maintenance_window_patching_mode="{{ exadata_infrastructure_maintenance_window_patching_mode | default('Rolling') }}"
+exadata_infrastructure_shape="{{ exadata_infrastructure_shape | default('Exadata.X9M') }}"
+exadata_infrastructure_storage_count={{ exadata_infrastructure_storage_count | default(3) }}
+
+# AZ Exadata VM Cluster
+vm_cluster_name                                                  = "{{ vm_cluster_name | default('vmc') }}"
+vm_cluster_hostname                                              = "{{ vm_cluster_hostname | default('dbsvr') }}"
+vm_cluster_gi_version                                            = "{{ vm_cluster_gi_version | default('19.0.0.0') }}"
+vm_cluster_cpu_core_count                                        = {{ vm_cluster_cpu_core_count | default(4) }}
+vm_cluster_ocpu_count                                            = {{ vm_cluster_ocpu_count | default(2) }}
+vm_cluster_data_collection_options_is_diagnostics_events_enabled = {{ vm_cluster_data_collection_options_is_diagnostics_events_enabled | default('true') | lower }}
+vm_cluster_data_collection_options_is_health_monitoring_enabled  = {{ vm_cluster_data_collection_options_is_health_monitoring_enabled | default('true') | lower }}
+vm_cluster_data_collection_options_is_incident_logs_enabled      = {{ vm_cluster_data_collection_options_is_incident_logs_enabled | default('true') | lower }}
+vm_cluster_data_storage_percentage                               = {{ vm_cluster_data_storage_percentage | default(80) }}
+vm_cluster_data_storage_size_in_tbs                              = {{ vm_cluster_data_storage_size_in_tbs | default(2) }}
+vm_cluster_db_node_storage_size_in_gbs                           = {{ vm_cluster_db_node_storage_size_in_gbs | default(500) }}
+vm_cluster_license_model                                         = "{{ vm_cluster_license_model | default('LicenseIncluded') }}"
+vm_cluster_memory_size_in_gbs                                    = {{ vm_cluster_memory_size_in_gbs | default(60) }}
+vm_cluster_time_zone                                             = "{{ vm_cluster_time_zone | default('UTC') }}"
+vm_cluster_is_local_backup_enabled                               = {{ vm_cluster_is_local_backup_enabled | default('false') | lower }}
+vm_cluster_is_sparse_diskgroup_enabled                           = {{ vm_cluster_is_sparse_diskgroup_enabled | default('false') | lower }}
+vm_cluster_ssh_public_keys                                       = {{ vm_cluster_ssh_public_keys | tojson }}
+vm_cluster_backup_subnet_cidr                                    = "{{ vm_cluster_backup_subnet_cidr | default('192.168.252.0/22') }}"
+## NSG ingress rules for OCI VCN, Not Azure VNet
+nsg_cidrs                                                        = {{ nsg_cidrs | default([{"source": "0.0.0.0/0", "destinationPortRange": {"max": 1522, "min": 1521}}]) | tojson }}
+
+# OCI Connection Profile (uncomment this section if not using environment variables i.e. TF_VAR_*)
+{% if oci_tenancy_ocid is defined and not use_env_vars %}
+oci_tenancy_ocid="{{ oci_tenancy_ocid }}"
+oci_user_ocid="{{ oci_user_ocid }}"
+oci_private_key_path="{{ oci_private_key_path }}"
+oci_fingerprint="{{ oci_fingerprint }}"
+{% if oci_private_key_password is defined %}
+oci_private_key_password = "{{ oci_private_key_password }}"
+{% endif %}
+{% else %}
+# oci_tenancy_ocid="OCID of the OCI tenancy"
+# oci_user_ocid="OCID of the OCI user calling the API"
+# oci_private_key_path="The path (including filename) of the private key"
+# oci_fingerprint="Fingerprint for the key pair being used"
+# oci_private_key_password = "Passphrase used for the key, if it's encrypted."
+{% endif %}
+
+
+# OCI Oracle DbHome + CDB with PDB
+enable_database_delete = {{ enable_database_delete | default('true') | lower }}
+db_home_source         = "{{ db_home_source | default('VM_CLUSTER_NEW') }}"
+db_home_version        = "{{ db_home_version | default('19.0.0.0') }}"
+db_home_name           = "{{ db_home_name | default('dbhome') }}"
+
+db_source              = "{{ db_source | default('NONE') }}"
+db_name                = "{{ db_name | default('db') }}"
+db_admin_password      = "{{ db_admin_password }}"

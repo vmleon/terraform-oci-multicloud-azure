@@ -1,0 +1,61 @@
+# Required
+az_region="{{ az_region | default('francecentral') }}"
+name="{{ name | default('adbsdemo') }}"
+admin_password="{{ admin_password }}"
+
+{% if common_tags is defined %}
+common_tags = {{ common_tags | tojson }}
+{% else %}
+# # Optional with defaults
+# common_tags = {
+#     createdby = "azurerm-oci-adbs-quickstart"
+# }
+{% endif %}
+
+{% if resource_group is defined %}
+# AZ Resource Group
+resource_group = "{{ resource_group }}"
+{% else %}
+# # AZ Resource Group
+# resource_group = "oracle-adbs"
+{% endif %}
+{% if new_rg is defined %}
+new_rg = {{ new_rg | lower }}
+{% else %}
+# new_rg = true
+{% endif %}
+{% if random_suffix_length is defined %}
+random_suffix_length = {{ random_suffix_length }}
+{% else %}
+# random_suffix_length = 3
+{% endif %}
+
+{% if virtual_network_name is defined or delegated_subnet_name is defined or virtual_network_address_space is defined or delegated_subnet_address_prefix is defined %}
+# AZ VNet
+{% if virtual_network_name is defined %}
+virtual_network_name            = "{{ virtual_network_name }}"
+{% else %}
+# virtual_network_name            = "vnet-oci"
+{% endif %}
+{% if delegated_subnet_name is defined %}
+delegated_subnet_name           = "{{ delegated_subnet_name }}"
+{% else %}
+# delegated_subnet_name           = "snet-delegate-oci"
+{% endif %}
+{% if virtual_network_address_space is defined %}
+virtual_network_address_space   = "{{ virtual_network_address_space }}"
+{% else %}
+# virtual_network_address_space   = "10.1.0.0/16"
+{% endif %}
+{% if delegated_subnet_address_prefix is defined %}
+delegated_subnet_address_prefix = "{{ delegated_subnet_address_prefix }}"
+{% else %}
+# delegated_subnet_address_prefix = "10.1.1.0/24"
+{% endif %}
+{% else %}
+# # AZ VNet
+# virtual_network_name            = "vnet-oci"
+# delegated_subnet_name           = "snet-delegate-oci"
+# virtual_network_address_space   = "10.1.0.0/16"
+# delegated_subnet_address_prefix = "10.1.1.0/24"
+{% endif %}

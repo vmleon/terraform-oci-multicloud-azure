@@ -1,0 +1,66 @@
+config_file_profile = "{{ config_file_profile | default('dummytenancy') }}"
+region              = "{{ region | default('eu-frankfurt-1') }}"
+location            = "{{ location | default('germanywestcentral') }}"
+zones               = "{{ zones | default('2') }}"
+resource_group_name = "{{ resource_group_name | default('rg') }}"
+vm_network_resource_group_name = "{{ vm_network_resource_group_name | default('VM-rg') }}"
+
+# DbHome, CDB, PDB
+db_home_display_name = "{{ db_home_display_name | default('dbhome1') }}"
+db_admin_password    = "{{ db_admin_password }}"
+db_name              = "{{ db_name | default('db1') }}"
+pdb_name             = "{{ pdb_name | default('pdb1') }}"
+db_home_source       = "{{ db_home_source | default('DATABASE') }}"
+db_version           = "{{ db_version | default('19.20.0.0') }}"
+db_source            = "{{ db_source | default('NONE') }}"
+
+# Networking Resources
+virtual_network_name            = "{{ virtual_network_name | default('vnet') }}"
+virtual_network_address_space   = "{{ virtual_network_address_space | default('10.1.0.0/16') }}"
+delegated_subnet_address_prefix = "{{ delegated_subnet_address_prefix | default('10.1.1.0/24') }}"
+delegated_subnet_name           = "{{ delegated_subnet_name | default('delegate') }}"
+
+# Exadata Infra and VM Cluster
+exadata_infrastructure_resource_name                             = "{{ exadata_infrastructure_resource_name | default('exainfra') }}"
+exadata_infrastructure_resource_display_name                     = "{{ exadata_infrastructure_resource_display_name | default('exainfra') }}"
+
+exadata_infrastructure_compute_cpu_count                         = {{ exadata_infrastructure_compute_cpu_count | default(2) }}
+exadata_infrastructure_maintenance_window_lead_time_in_weeks     = {{ exadata_infrastructure_maintenance_window_lead_time_in_weeks | default(0) }}
+exadata_infrastructure_maintenance_window_patching_mode          = "{{ exadata_infrastructure_maintenance_window_patching_mode | default('Rolling') }}"
+exadata_infrastructure_maintenance_window_preference             = "{{ exadata_infrastructure_maintenance_window_preference | default('NoPreference') }}"
+exadata_infrastructure_shape                                     = "{{ exadata_infrastructure_shape | default('Exadata.X9M') }}"
+exadata_infrastructure_storage_count                             = {{ exadata_infrastructure_storage_count | default(3) }}
+
+vm_cluster_resource_name                                         = "{{ vm_cluster_resource_name | default('vmc1') }}"
+vm_cluster_display_name                                          = "{{ vm_cluster_display_name | default('vmc1') }}"
+vm_cluster_cpu_core_count                                        = {{ vm_cluster_cpu_core_count | default(4) }}
+vm_cluster_data_collection_options_is_diagnostics_events_enabled = {{ vm_cluster_data_collection_options_is_diagnostics_events_enabled | default('true') | lower }}
+vm_cluster_data_collection_options_is_health_monitoring_enabled  = {{ vm_cluster_data_collection_options_is_health_monitoring_enabled | default('true') | lower }}
+vm_cluster_data_collection_options_is_incident_logs_enabled      = {{ vm_cluster_data_collection_options_is_incident_logs_enabled | default('true') | lower }}
+vm_cluster_data_storage_percentage                               = {{ vm_cluster_data_storage_percentage | default(80) }}
+vm_cluster_data_storage_size_in_tbs                              = {{ vm_cluster_data_storage_size_in_tbs | default(2) }}
+vm_cluster_db_node_storage_size_in_gbs                           = {{ vm_cluster_db_node_storage_size_in_gbs | default(120) }}
+vm_cluster_gi_version                                            = "{{ vm_cluster_gi_version | default('19.0.0.0') }}"
+vm_cluster_hostname                                              = "{{ vm_cluster_hostname | default('vmc1a') }}"
+vm_cluster_is_local_backup_enabled                               = {{ vm_cluster_is_local_backup_enabled | default('false') | lower }}
+vm_cluster_is_sparse_diskgroup_enabled                           = {{ vm_cluster_is_sparse_diskgroup_enabled | default('false') | lower }}
+vm_cluster_license_model                                         = "{{ vm_cluster_license_model | default('LicenseIncluded') }}"
+vm_cluster_memory_size_in_gbs                                    = {{ vm_cluster_memory_size_in_gbs | default(60) }}
+vm_cluster_time_zone                                             = "{{ vm_cluster_time_zone | default('UTC') }}"
+vm_cluster_ssh_public_key                                        = "{{ vm_cluster_ssh_public_key }}"
+nsgCidrs = {{ nsgCidrs | default([{"source": "0.0.0.0/0", "destinationPortRange": {"max": 1522, "min": 1521}}]) | tojson }}
+# virtual machine
+virtual_machine_name             = "{{ virtual_machine_name | default('ciciTest') }}"
+vm_size                          = "{{ vm_size | default('Standard_D2as_v3') }}"
+vm_vnet_name                     = "{{ vm_vnet_name | default('VMDatabaseVirtualNetwork') }}"
+vm_virtual_network_address_space = "{{ vm_virtual_network_address_space | default('10.2.0.0/16') }}"
+vm_subnet_address_prefix         = "{{ vm_subnet_address_prefix | default('10.2.0.0/24') }}"
+ssh_private_key_file             = "{{ ssh_private_key_file | default('~/.ssh/id_rsa') }}"
+enable_connectivity_validation   = {{ enable_connectivity_validation | default('true') | lower }}
+{% if vm_public_ip_address is defined %}
+# Pass existing VM Public IP address
+vm_public_ip_address             = "{{ vm_public_ip_address }}"
+{% else %}
+# Pass existing VM Public IP address
+# vm_public_ip_address             = "123.123.123"
+{% endif %}

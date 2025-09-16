@@ -1,0 +1,15 @@
+location = "{{ location | default('germanywestcentral') }}"
+
+resource_group = "{{ resource_group | default('rg') }}"
+
+virtual_network_name            = "{{ virtual_network_name | default('vnet') }}"
+virtual_network_address_space   = "{{ virtual_network_address_space | default('10.1.0.0/16') }}"
+delegated_subnet_name           = "{{ delegated_subnet_name | default('delegate') }}"
+delegated_subnet_address_prefix = "{{ delegated_subnet_address_prefix | default('10.1.1.0/24') }}"
+
+
+
+db_name           = "{{ db_name | default('demodb') }}"
+db_admin_password = "{{ db_admin_password }}"
+db_ecpu_count     = {{ db_ecpu_count | default(2) }}
+db_storage_in_gb  = {{ db_storage_in_gb | default(20) }}
