@@ -179,6 +179,32 @@ variable "customer_contacts" {
   default     = []
 }
 
+# Azure Provider Credentials
+variable "arm_subscription_id" {
+  type        = string
+  description = "Azure Subscription ID"
+  default     = null
+}
+
+variable "arm_client_id" {
+  type        = string
+  description = "Azure Client ID (Service Principal App ID)"
+  default     = null
+}
+
+variable "arm_client_secret" {
+  type        = string
+  description = "Azure Client Secret"
+  sensitive   = true
+  default     = null
+}
+
+variable "arm_tenant_id" {
+  type        = string
+  description = "Azure Tenant ID"
+  default     = null
+}
+
 # OCI Authentication
 variable "oci_config_file_profile" {
   type        = string

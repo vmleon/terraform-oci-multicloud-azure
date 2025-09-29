@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Stack management CLI for Oracle Database @ Azure multi-cloud deployments.
-Manages template selection, configuration, and workspace lifecycle.
+Manages template selection and configuration generation.
 """
 
 import os
@@ -11,11 +11,11 @@ import json
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 import click
 from jinja2 import Environment, FileSystemLoader
-from dotenv import load_dotenv, set_key, unset_key
+from dotenv import load_dotenv, set_key
 
 # Template metadata with descriptions
 TEMPLATE_PROFILES = {
@@ -64,7 +64,6 @@ TEMPLATE_PROFILES = {
 }
 
 ENV_FILE = ".env"
-WORKSPACE_DIR = "workspace"
 
 
 def load_env_config() -> Dict[str, str]:
@@ -118,21 +117,21 @@ def get_ssh_keys_input() -> List[str]:
                     with open(key_path, 'r') as f:
                         key_content = f.read().strip()
                     keys.append(key_content)
-                    click.echo(f" Added key from {key_input}")
+                    click.echo(f"✓ Added key from {key_input}")
                 except Exception as e:
-                    click.echo(f" Error reading {key_input}: {e}")
+                    click.echo(f"✗ Error reading {key_input}: {e}")
             else:
-                click.echo(f" File not found: {key_input}")
+                click.echo(f"✗ File not found: {key_input}")
         else:
             # Assume it's direct key content
             if key_input.startswith('ssh-'):
                 keys.append(key_input)
-                click.echo(" Added direct key content")
+                click.echo("✓ Added direct key content")
             else:
-                click.echo(" Invalid key format. Should start with 'ssh-'")
+                click.echo("✗ Invalid key format. Should start with 'ssh-'")
 
     if not keys:
-        click.echo("� No SSH keys provided. You'll need to add them manually.")
+        click.echo("⚠ No SSH keys provided. You'll need to add them manually.")
         keys = ["ssh-rsa REPLACE_WITH_YOUR_PUBLIC_KEY"]
 
     return keys
@@ -147,7 +146,7 @@ def collect_template_variables(template_name: str) -> Dict[str, Any]:
 
     # Common variables for most templates
     if template_name != "az-oci-sso-federation" and template_name != "az-oci-rbac-n-sso-fed":
-        variables["az_region"] = click.prompt("Azure Region", default="germanywestcentral")
+        variables["az_region"] = click.prompt("Azure Region", default="useast")
 
         if "resource_group" in ["avm-oci-exadata-quickstart", "azurerm-oci-exadata-quickstart", "az-oci-adbs"]:
             variables["resource_group"] = click.prompt("Resource Group Name", default="oradb")
@@ -189,7 +188,7 @@ def collect_template_variables(template_name: str) -> Dict[str, Any]:
                     with open(key_path, 'r') as f:
                         variables[ssh_field] = f.read().strip()
                 else:
-                    click.echo(f"� SSH key file not found: {ssh_key}")
+                    click.echo(f"⚠ SSH key file not found: {ssh_key}")
                     variables[ssh_field] = ssh_key
             else:
                 variables[ssh_field] = ssh_key
@@ -206,7 +205,7 @@ def cli():
 @cli.command()
 def setup():
     """Interactive setup wizard for Oracle Database @ Azure deployment."""
-    click.echo("=� Oracle Database @ Azure Stack Setup")
+    click.echo("=🚀 Oracle Database @ Azure Stack Setup")
     click.echo("=" * 50)
 
     # Load existing configuration
@@ -224,7 +223,7 @@ def setup():
 
     # Template selection
     if not selected_template:
-        click.echo("\n=� Available Deployment Templates:")
+        click.echo("\n=📦 Available Deployment Templates:")
         template_choices = []
         for i, (key, profile) in enumerate(TEMPLATE_PROFILES.items(), 1):
             click.echo(f"{i:2d}. {profile['name']}")
@@ -242,32 +241,19 @@ def setup():
             except (ValueError, click.Abort):
                 click.echo("Please enter a valid number")
 
-    click.echo(f"\n Selected: {TEMPLATE_PROFILES[selected_template]['name']}")
+    click.echo(f"\n✓ Selected: {TEMPLATE_PROFILES[selected_template]['name']}")
     save_env_var("SELECTED_TEMPLATE", selected_template)
 
-    # Setup workspace
-    workspace_path = Path(WORKSPACE_DIR)
-    if workspace_path.exists():
-        if click.confirm("Workspace exists. Clear it?", default=True):
-            shutil.rmtree(workspace_path)
-
-    workspace_path.mkdir(exist_ok=True)
-    save_env_var("WORKSPACE_DIR", str(workspace_path))
-
-    # Copy template files to workspace
+    # Get template path
     template_path = Path("templates") / selected_template
     if not template_path.exists():
-        click.echo(f" Template directory not found: {template_path}")
+        click.echo(f"✗ Template directory not found: {template_path}")
         sys.exit(1)
 
-    for file in template_path.iterdir():
-        if file.is_file() and file.name != "terraform.tfvars.template":
-            shutil.copy2(file, workspace_path)
-
-    click.echo(f" Template files copied to {workspace_path}")
+    click.echo(f"✓ Using template at {template_path}")
 
     # Collect Azure credentials
-    click.echo("\n= Azure Credentials")
+    click.echo("\n=🔐 Azure Credentials")
     current_client_id = env_config.get("ARM_CLIENT_ID")
     if current_client_id and click.confirm(f"Use existing Azure Client ID ({current_client_id[:8]}...)?", default=True):
         arm_client_id = current_client_id
@@ -276,7 +262,7 @@ def setup():
             arm_client_id = click.prompt("Azure Client ID (Service Principal App ID)")
             if validate_uuid(arm_client_id):
                 break
-            click.echo(" Invalid UUID format")
+            click.echo("✗ Invalid UUID format")
 
     arm_client_secret = click.prompt("Azure Client Secret", hide_input=True)
 
@@ -300,19 +286,19 @@ def setup():
 
     # Collect OCI credentials (skip for SSO templates that might not need them)
     if selected_template not in ["az-oci-sso-federation", "az-oci-rbac-n-sso-fed"]:
-        click.echo("\n= OCI Credentials")
+        click.echo("\n=🔐 OCI Credentials")
 
         while True:
             oci_tenancy_ocid = click.prompt("OCI Tenancy OCID", default=env_config.get("TF_VAR_oci_tenancy_ocid", ""))
             if validate_ocid(oci_tenancy_ocid):
                 break
-            click.echo(" Invalid OCID format")
+            click.echo("✗ Invalid OCID format")
 
         while True:
             oci_user_ocid = click.prompt("OCI User OCID", default=env_config.get("TF_VAR_oci_user_ocid", ""))
             if validate_ocid(oci_user_ocid):
                 break
-            click.echo(" Invalid OCID format")
+            click.echo("✗ Invalid OCID format")
 
         while True:
             oci_private_key_path = click.prompt("OCI Private Key Path", default=env_config.get("TF_VAR_oci_private_key_path", ""))
@@ -320,7 +306,7 @@ def setup():
             if validate_file_path(expanded_path):
                 oci_private_key_path = expanded_path
                 break
-            click.echo(f" File not found: {expanded_path}")
+            click.echo(f"✗ File not found: {expanded_path}")
 
         oci_fingerprint = click.prompt("OCI Key Fingerprint", default=env_config.get("TF_VAR_oci_fingerprint", ""))
 
@@ -370,19 +356,19 @@ def setup():
         template = env.get_template("terraform.tfvars.j2")
         rendered = template.render(**context)
 
-        # Write terraform.tfvars
-        tfvars_path = workspace_path / "terraform.tfvars"
+        # Write terraform.tfvars in the template directory
+        tfvars_path = template_path / "terraform.tfvars"
         with open(tfvars_path, 'w') as f:
             f.write(rendered)
 
-        click.echo(f" Generated {tfvars_path}")
+        click.echo(f"✓ Generated {tfvars_path}")
     else:
-        click.echo(f"� No Jinja2 template found at {template_j2_path}")
+        click.echo(f"⚠ No Jinja2 template found at {template_j2_path}")
 
     # Display next steps
-    click.echo("\n<� Setup Complete!")
+    click.echo("\n✨ Setup Complete!")
     click.echo("Next steps:")
-    click.echo(f"1. cd {workspace_path}")
+    click.echo(f"1. cd {template_path}")
     click.echo("2. terraform init")
     click.echo("3. terraform plan")
     click.echo("4. terraform apply")
@@ -391,63 +377,90 @@ def setup():
 
 @cli.command()
 def clean():
-    """Clean up terraform resources and workspace."""
-    click.echo(">� Cleaning up Oracle Database @ Azure Stack")
+    """Clean up terraform resources and generated files."""
+    click.echo("🧹 Cleaning up Oracle Database @ Azure Stack")
     click.echo("=" * 50)
 
     # Load configuration
     env_config = load_env_config()
-    workspace_dir = env_config.get("WORKSPACE_DIR", WORKSPACE_DIR)
-    workspace_path = Path(workspace_dir)
+    selected_template = env_config.get("SELECTED_TEMPLATE")
 
-    if not workspace_path.exists():
-        click.echo(" No workspace found, nothing to clean")
-        return
+    if not selected_template:
+        click.echo("✓ No template selected, checking for .env file to clean")
+    else:
+        template_path = Path("templates") / selected_template
 
-    # Check terraform state
-    tfstate_path = workspace_path / "terraform.tfstate"
-    has_resources = False
+        if template_path.exists():
+            # Check terraform state
+            tfstate_path = template_path / "terraform.tfstate"
 
-    if tfstate_path.exists():
-        try:
-            # Check if there are resources in state
-            result = subprocess.run(
-                ["terraform", "state", "list"],
-                cwd=workspace_path,
-                capture_output=True,
-                text=True,
-                check=False
-            )
+            if tfstate_path.exists():
+                try:
+                    # Check if there are resources in state
+                    result = subprocess.run(
+                        ["terraform", "state", "list"],
+                        cwd=template_path,
+                        capture_output=True,
+                        text=True,
+                        check=False
+                    )
 
-            if result.returncode == 0 and result.stdout.strip():
-                resources = result.stdout.strip().split('\n')
-                has_resources = True
-                click.echo(f"� Found {len(resources)} resources in terraform state:")
-                for resource in resources[:10]:  # Show first 10
-                    click.echo(f"  - {resource}")
-                if len(resources) > 10:
-                    click.echo(f"  ... and {len(resources) - 10} more")
+                    if result.returncode == 0 and result.stdout.strip():
+                        resources = result.stdout.strip().split('\n')
+                        click.echo(f"⚠ Found {len(resources)} resources in terraform state:")
+                        for resource in resources[:10]:  # Show first 10
+                            click.echo(f"  - {resource}")
+                        if len(resources) > 10:
+                            click.echo(f"  ... and {len(resources) - 10} more")
 
-                click.echo(f"\n=� Run 'cd {workspace_path} && terraform destroy' first")
+                        click.echo(f"\n⚠ Run 'cd {template_path} && terraform destroy' first")
 
-                if not click.confirm("Continue cleanup anyway?", default=False):
-                    click.echo("Cleanup cancelled")
-                    return
-        except subprocess.SubprocessError:
-            click.echo("Could not check terraform state (terraform not available)")
+                        if not click.confirm("Continue cleanup anyway?", default=False):
+                            click.echo("Cleanup cancelled")
+                            return
+                except subprocess.SubprocessError:
+                    click.echo("Could not check terraform state (terraform not available)")
 
-    # Remove workspace
-    if click.confirm(f"Delete workspace directory '{workspace_path}'?", default=True):
-        shutil.rmtree(workspace_path)
-        click.echo(f" Removed {workspace_path}")
+            # Clean up terraform files in the template directory
+            tfvars_path = template_path / "terraform.tfvars"
+            if tfvars_path.exists():
+                if click.confirm(f"Delete generated terraform.tfvars in {template_path}?", default=True):
+                    tfvars_path.unlink()
+                    click.echo(f"✓ Removed {tfvars_path}")
+
+            # Clean up .terraform directory
+            terraform_dir = template_path / ".terraform"
+            if terraform_dir.exists():
+                if click.confirm(f"Delete .terraform directory in {template_path}?", default=True):
+                    shutil.rmtree(terraform_dir)
+                    click.echo(f"✓ Removed {terraform_dir}")
+
+            # Clean up terraform lock file
+            lock_file = template_path / ".terraform.lock.hcl"
+            if lock_file.exists():
+                if click.confirm(f"Delete terraform lock file in {template_path}?", default=True):
+                    lock_file.unlink()
+                    click.echo(f"✓ Removed {lock_file}")
+
+            # Clean up state files
+            for state_file in template_path.glob("*.tfstate*"):
+                if click.confirm(f"Delete state file {state_file.name}?", default=True):
+                    state_file.unlink()
+                    click.echo(f"✓ Removed {state_file}")
+
+            # Clean up tfplan files
+            for plan_file in template_path.glob("tfplan*"):
+                if click.confirm(f"Delete plan file {plan_file.name}?", default=True):
+                    plan_file.unlink()
+                    click.echo(f"✓ Removed {plan_file}")
 
     # Optionally remove .env
     if Path(ENV_FILE).exists():
         if click.confirm(f"Delete configuration file '{ENV_FILE}'?", default=False):
             Path(ENV_FILE).unlink()
-            click.echo(f" Removed {ENV_FILE}")
+            click.echo(f"✓ Removed {ENV_FILE}")
 
-    click.echo("<� Cleanup complete!")
+    click.echo("✨ Cleanup complete!")
 
 
 if __name__ == "__main__":

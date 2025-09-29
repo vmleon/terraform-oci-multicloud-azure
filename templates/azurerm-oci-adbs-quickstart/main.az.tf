@@ -1,5 +1,22 @@
 provider "azurerm" {
   features {}
+  # Azure authentication can be handled via environment variables:
+  # ARM_SUBSCRIPTION_ID, ARM_CLIENT_ID, ARM_CLIENT_SECRET, ARM_TENANT_ID
+  # Or explicitly via provider configuration
+  subscription_id = var.arm_subscription_id
+  client_id       = var.arm_client_id
+  client_secret   = var.arm_client_secret
+  tenant_id       = var.arm_tenant_id
+}
+
+# OCI Provider configuration
+provider "oci" {
+  auth                 = "APIKey"
+  tenancy_ocid         = var.oci_tenancy_ocid
+  user_ocid            = var.oci_user_ocid
+  fingerprint          = var.oci_fingerprint
+  private_key_path     = var.oci_private_key_path
+  private_key_password = var.oci_private_key_password
 }
 
 locals {

@@ -51,6 +51,7 @@ venv/
 
 # Stack management
 .env
+.env.bak
 workspace/
 *.tfvars
 !*.tfvars.template
